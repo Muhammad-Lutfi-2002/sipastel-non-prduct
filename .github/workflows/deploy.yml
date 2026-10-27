@@ -1,0 +1,60 @@
+name: Deploy to GitHub Pages
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      # `npm ci` installs exactly what package-lock.json pins (reproducible builds).
+      - run: npm ci
+      # Quality gate: nothing is deployed unless types and tests pass.
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          VITE_WHATSAPP_NUMBER: ${{ secrets.VITE_WHATSAPP_NUMBER }}
+          # The DSN is a public identifier (safe to hardcode, same as any
+          # other Sentry JS SDK setup) - project "sipastel" under org
+          # "lutfi-qk". Tags every event with the commit it came from.
+          VITE_SENTRY_DSN: https://b2178b38a694518ebdd196f147458fee@o4512133270208512.ingest.de.sentry.io/4512134961561680
+          VITE_APP_VERSION: ${{ github.sha }}
+          # Optional: add a SENTRY_AUTH_TOKEN repo secret (Settings > Secrets
+          # and variables > Actions) to also upload source maps, so Sentry
+          # shows real source instead of minified code in stack traces.
+          # Builds succeed with or without it (see vite.config.ts).
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+      # GitHub Pages cannot rewrite unknown paths to index.html, so a direct
+      # visit / refresh on e.g. /admin/orders would 404. Serving the app shell
+      # as 404.html lets the client-side router take over.
+      - run: cp dist/index.html dist/404.html
+      - uses: actions/upload-pages-artifact@v3
+        if: github.event_name == 'push'
+        with:
+          path: ./dist
+
+  deploy:
+    if: github.event_name == 'push'
+    needs: build
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

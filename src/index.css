@@ -1,0 +1,335 @@
+@import "tailwindcss";
+
+/* -------------------------------------------------------------
+   SIPASTEL DESIGN TOKENS - Dark / Light Toggle
+   -------------------------------------------------------------
+   Official SIPASTEL identity: black + white + a single controlled
+   orange accent, in two switchable modes. Dark is the default.
+   Toggling is driven by a `data-theme="light"` attribute on <html>,
+   set by ThemeContext (see src/context/ThemeContext.tsx) and
+   persisted to localStorage. No gradients, no glow, no glass - the
+   accent is used only where it has a function (CTAs, active state,
+   focus rings, key numbers).
+
+   HOW IT WORKS: Tailwind v4's @theme block both registers these as
+   CSS custom properties AND generates the matching utility classes
+   (bg-paper, text-ink, border-line, ...) which reference the
+   properties via var(...). Because of that indirection, redefining
+   the same custom property names inside :root[data-theme="light"]
+   is enough to retheme every component that already uses these
+   utilities - no per-component change needed when toggling.
+
+   MIGRATION STATUS: these tokens are the source of truth for every
+   NEW component and are what powers the toggle. Applied to the
+   app's shell (Navbar, Footer, Hero, AdminLayout, AdminLoginPage,
+   AdminNotificationCenter, AdminQuickSearchModal) and is being
+   extended page by page - see AUDIT_NOTES.md for the tracked scope.
+   Anything not yet migrated still renders in its old hardcoded
+   light palette regardless of the toggle state.
+   ------------------------------------------------------------- */
+@theme {
+  /* Neutrals - Dark mode values (default) */
+  --color-ink: #FFFFFF; /* primary text */
+  --color-ink-soft: #FFFFFF; /* text on top of the accent color */
+  --color-paper: #0D0D0D; /* app background */
+  --color-surface: #171717; /* card / raised panel background */
+  --color-surface-hover: #202020; /* "secondary" background - hover/alt rows */
+  --color-line: #2A2A2A; /* card/section borders */
+  --color-line-strong: #3A3A3A; /* input borders, stronger dividers */
+  --color-muted: #7A7A7A; /* tertiary text, placeholders */
+  --color-body: #A3A3A3; /* secondary text */
+  --color-heading: #D4D4D4; /* form labels, sub-headings */
+
+  /* Brand accent - orange, used with intent, not decoration */
+  --color-accent: #F97316;
+  --color-accent-soft: #FB923C; /* hover/lighter accent */
+  --color-accent-muted: #EA580C; /* pressed/active accent */
+  --color-accent-wash: rgba(249, 115, 22, 0.12); /* subtle tinted bg, e.g. active nav item */
+  /* Text/icons placed ON TOP of accent-colored fills (buttons, badges).
+     Fixed dark value in BOTH modes on purpose: white text on this orange
+     only reaches ~2.8:1 contrast (fails WCAG AA), while dark text reaches
+     ~6-7:1 in both themes. Never use --color-ink-soft for this - that
+     token is for text on fixed-dark surfaces (photo overlays), which is
+     a different job that happens to look similar. */
+  --color-on-accent: #1A0F04;
+
+  /* Functional states - tuned for dark-surface contrast */
+  --color-sage: #22C55E; /* success */
+  --color-sage-soft: #4ADE80;
+  --color-warning: #EAB308; /* warning - kept distinct from the brand accent orange */
+  --color-danger: #EF4444; /* error / destructive */
+  --color-info: #A78BFA; /* informational accent */
+  /* Text on top of solid success-green fills (e.g. "Setujui Mockup"). Dark
+     text reaches ~8:1 on the green; white only ~2.3:1. */
+  --color-on-sage: #052E16;
+
+  /* Typography. Defining these makes Tailwind's font-sans / font-heading /
+     font-mono utilities use the fonts we actually load. Before, `font-sans`
+     (set on <body>) fell back to the system stack, so Plus Jakarta Sans was
+     downloaded but never displayed. */
+  --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-heading: 'Manrope', 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+}
+
+/* Light mode override - same token names, light values. Applied
+   whenever <html data-theme="light"> is set. */
+:root[data-theme='light'] {
+  --color-ink: #111111;
+  --color-ink-soft: #FFFFFF;
+  --color-paper: #FAFAFA;
+  --color-surface: #FFFFFF;
+  --color-surface-hover: #F3F3F3;
+  --color-line: #E5E5E5;
+  --color-line-strong: #D4D4D4;
+  --color-muted: #8A8A8A;
+  --color-body: #666666;
+  --color-heading: #333333;
+
+  --color-accent: #EA580C;
+  --color-accent-soft: #F97316;
+  --color-accent-muted: #C2410C;
+  --color-accent-wash: rgba(234, 88, 12, 0.08);
+  --color-on-accent: #1A0F04;
+
+  --color-sage: #16A34A;
+  --color-sage-soft: #22C55E;
+  --color-warning: #CA8A04;
+  --color-danger: #DC2626;
+  --color-info: #7C3AED;
+  --color-on-sage: #FFFFFF;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    font-family: var(--font-sans);
+    /* Keep text a sensible size on phones after rotation. */
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+  
+  h1, h2, h3, h4, .font-heading {
+    font-family: var(--font-heading);
+    letter-spacing: -0.02em;
+  }
+}
+
+/* Custom subtle scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-paper);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-line-strong);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-muted);
+}
+
+/* -------------------------------------------------------------
+   SIPASTEL DESIGN SYSTEM ANIMATIONS (Subtle, Fast, Functional)
+   ------------------------------------------------------------- */
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-hover) 0%,
+    var(--color-line) 50%,
+    var(--color-surface-hover) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+
+@keyframes toastSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-toast-in {
+  animation: toastSlideUp 220ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes modalBackdrop {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modalContent {
+  from {
+    opacity: 0;
+    transform: scale(0.98) translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-modal-backdrop {
+  animation: modalBackdrop 180ms ease-out forwards;
+}
+
+.animate-modal-content {
+  animation: modalContent 220ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes drawerSlideRight {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes drawerSlideLeft {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-right {
+  animation: drawerSlideRight 240ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-slide-left {
+  animation: drawerSlideLeft 240ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes cartBadgeBump {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.28);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.animate-cart-pulse {
+  animation: cartBadgeBump 350ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes subtleFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: subtleFadeUp 320ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes subtleFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: subtleFadeIn 200ms ease-out forwards;
+}
+
+/* Button interactive base classes */
+.btn-interaction {
+  transition: transform 150ms ease-out, background-color 150ms ease-out, border-color 150ms ease-out, opacity 150ms ease-out;
+}
+
+.btn-interaction:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.btn-interaction:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+/* Reduced motion accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .skeleton-shimmer {
+    animation: none !important;
+    background: var(--color-surface-hover) !important;
+  }
+
+  .btn-interaction:hover:not(:disabled),
+  .btn-interaction:active:not(:disabled) {
+    transform: none !important;
+  }
+}
+
+/* Scope window.print() output to just the invoice card (used by the
+   Billing & Invoices admin view), instead of printing the entire page
+   chrome (sidebar, backdrop, buttons). */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #printable-invoice-card,
+  #printable-invoice-card * {
+    visibility: visible;
+  }
+  #printable-invoice-card {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    max-height: none;
+    box-shadow: none;
+    border: none;
+  }
+}
+

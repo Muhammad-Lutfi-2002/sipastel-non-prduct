@@ -1,0 +1,14 @@
+{
+  "name": "SIPASTEL Apparel Studio",
+  "short_name": "SIPASTEL",
+  "description": "Konveksi kaos, jersey, dan pakaian custom di Bogor.",
+  "start_url": "/custom-order",
+  "display": "standalone",
+  "background_color": "#141312",
+  "theme_color": "#141312",
+  "lang": "id",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

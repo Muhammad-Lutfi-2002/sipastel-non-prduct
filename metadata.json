@@ -1,0 +1,8 @@
+{
+  "name": "SIPASTEL — Konveksi & Custom Apparel Bogor",
+  "description": "SIPASTEL Apparel Studio — konveksi kaos, jersey, dan pakaian custom di Bogor. Sablon, bordir, dan produksi massal dengan mockup gratis sebelum produksi.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

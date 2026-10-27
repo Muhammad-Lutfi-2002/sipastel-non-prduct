@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+# The staff console has no reason to be indexed and must never appear
+# in search results for a random visitor to stumble into.
+Disallow: /admin
+Disallow: /cart
+Disallow: /checkout
+
+Sitemap: https://sipastel.com/sitemap.xml

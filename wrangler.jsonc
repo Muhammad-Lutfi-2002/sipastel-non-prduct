@@ -1,0 +1,21 @@
+{
+  "name": "sipastel",
+  "compatibility_date": "2025-09-01",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application"
+  }
+  // NOTE: A Cloudflare R2-backed image upload system (Worker + bindings)
+  // is already built in this repo under worker/ (see src/utils/imageUpload.ts
+  // and src/utils/storage.ts's comments) but intentionally disabled for now
+  // - the app currently uploads design files straight to Supabase Storage
+  // again. To switch back to R2 later:
+  //   1. Create the R2 bucket "sipastel-images" in the Cloudflare Dashboard
+  //   2. Add back:
+  //        "main": "./worker/index.ts",
+  //        "r2_buckets": [{ "binding": "IMAGES_BUCKET", "bucket_name": "sipastel-images" }],
+  //        "vars": { "ALLOWED_ORIGIN": "...", "MAX_UPLOAD_MB": "8",
+  //                  "SUPABASE_URL": "...", "SUPABASE_ANON_KEY": "..." }
+  //   3. In src/utils/storage.ts, change uploadDesignFile() to call
+  //      uploadImage(file, 'designs', orderId) from './imageUpload'
+}
